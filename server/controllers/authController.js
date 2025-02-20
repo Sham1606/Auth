@@ -2,6 +2,7 @@
 import bcrypt from "bcryptjs";
 import userModel from "../models/userModel.js";
 import jwt from "jsonwebtoken";
+import transporter from "../config/nodemailer.js";
 
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -37,6 +38,31 @@ export const register = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days and token will expire
     }); // only http request accept the cookie
+
+    try {
+      const mailOptions = {
+        from: {
+          name: "Auth App",
+          address: process.env.SENDER_EMAIL
+        },
+        to: email,
+        subject: 'Welcome to Auth',
+        text: `Welcome to our Auth application, Your Account has been created with email id: ${email}!`,
+        html: `
+          <h2>Welcome to Auth App!</h2>
+          <p>Your account has been successfully created.</p>
+          <p>Email: ${email}</p>
+          <p>Name: ${name}</p>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      return res.json({ success: true, message: "Registration successful and welcome email sent" });
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+      // Still return success even if email fails, but log the error
+      return res.json({ success: true, message: "Registration successful but email sending failed" });
+    }
 
     return res.json({ success: true });
   } catch (error) {
@@ -76,6 +102,17 @@ export const login = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days and token will expire
     }); // only http request accept the cookie
+    
+
+    //Sending Welcome Email
+    const mailOptions = {
+      from : process.env.SENDER_EMAIL,
+      to: email,
+      subject: 'Welcome to Auth',
+      text: `Welcome to our Auth application, ${user.name}!`,
+    }
+    
+    await transporter.sendMail(mailOptions);
 
     return res.json({ success: true });
   } catch (error) {
@@ -96,3 +133,73 @@ export const logout = async (req, res) => {
     return res.json({ success: false, message: error.message });
   }
 };
+
+export const sendVerifyOtp = async(req, res) => {
+  try {
+    
+    const { userId } = req.body; // to get userId from request
+    
+    const user = await userModel.findById(userId);
+
+    if(user.isAccountVerified){
+      return res.json({ success: false, message: "Account already verified" });
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000)); // to generate 6 digit random number
+
+    user.verifyOtp = otp;
+    user.verifyOtpExpireAt = Date.now() + 24*60*60*1000; // 24 hours
+
+    await user.save();
+
+    const mailOption = {
+      from: {
+        name: "Auth App",
+        address: process.env.SENDER_EMAIL
+      },
+      to: user.email,
+      subject: 'Verify Account',
+      text: `Verify your account by entering the OTP: ${otp}`,
+      html: `
+        <h2>Verify Account!</h2>
+        <p>Please verify your account by entering the OTP: ${otp}</p>
+      `
+    }
+
+    await transporter.sendMail(mailOption);
+  } catch (error) {
+    res.json({ success:false, message: error.message });
+  }
+}
+
+export const verifyEmail = async(req, res) => {
+  const {userId, otp}  = req.body;
+
+  if(!userId || !otp){
+    return res.json({ success: false, message: "Missing Details" });
+  }
+  try {
+    const user = await userModel.findById(userId);
+
+    if(!user){
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    if(user.verifyOtp === '' || user.verifyOtp !== otp ) {
+      return res.json({ success: false, message: "Invalid OTP" });
+    }
+
+    if(user.verifyOtpExpireAt < Date.now()){
+      return res.json({ success: false, message: "OTP Expired" });
+    }
+
+    user.isAccountVerified = true;
+    user.verifyOtp = '';
+    user.verifyOtpExpireAt = 0;
+
+    await user.save();
+    return res.json({ success: true, message: "Account Verified Successfully" });
+  } catch (error) {
+    return res.json({ success: false, message: error.message });
+  }
+}
