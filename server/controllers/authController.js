@@ -164,11 +164,91 @@ export const sendVerifyOtp = async(req, res) => {
         address: process.env.SENDER_EMAIL
       },
       to: user.email,
-      subject: 'Verify Account',
-      text: `Verify your account by entering the OTP: ${otp}`,
+      subject: 'Verify Your Account - Auth App',
+      text: `Your verification OTP is: ${otp}. This code will expire in 24 hours.`,
       html: `
-        <h2>Verify Account!</h2>
-        <p>Please verify your account by entering the OTP: ${otp}</p>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Email Verification</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              margin: 0;
+              padding: 0;
+              background-color: #f9f9f9;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #ffffff;
+              border-radius: 8px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+              text-align: center;
+              padding: 20px 0;
+              border-bottom: 1px solid #eaeaea;
+            }
+            .content {
+              padding: 20px 0;
+              color: #333333;
+            }
+            .otp-container {
+              margin: 20px 0;
+              padding: 15px;
+              background-color: #f5f5f5;
+              border-radius: 5px;
+              text-align: center;
+            }
+            .otp-code {
+              font-size: 32px;
+              font-weight: bold;
+              letter-spacing: 5px;
+              color: #4a4a4a;
+            }
+            .expiry {
+              margin-top: 15px;
+              font-size: 14px;
+              color: #777777;
+            }
+            .footer {
+              margin-top: 30px;
+              padding-top: 20px;
+              border-top: 1px solid #eaeaea;
+              text-align: center;
+              font-size: 12px;
+              color: #999999;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="color: #3498db; margin: 0;">Auth App</h1>
+              <p style="margin: 5px 0 0 0;">Email Verification</p>
+            </div>
+            <div class="content">
+              <p>Hello ${user.name},</p>
+              <p>Thank you for registering with Auth App. Please verify your email address by entering the following OTP code:</p>
+              
+              <div class="otp-container">
+                <div class="otp-code">${otp}</div>
+                <p class="expiry">This code will expire in 24 hours</p>
+              </div>
+              
+              <p>If you did not request this verification, please ignore this email or contact our support team.</p>
+            </div>
+            <div class="footer">
+              <p>This is an automated email. Please do not reply.</p>
+              <p>&copy; ${new Date().getFullYear()} Auth App. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
       `
     }
 
@@ -260,11 +340,100 @@ export const sendResetOtp = async (req, res) => {
         address: process.env.SENDER_EMAIL
       },
       to: user.email,
-      subject: 'Password OTP Email',
-      text: `Reset your password by entering the OTP: ${otp}`,
+      subject: 'Password Reset - Auth App',
+      text: `Your password reset OTP is: ${otp}. This code will expire in 15 minutes.`,
       html: `
-        <h2>Reset Password!</h2>
-        <p>Please reset your password by entering the OTP: ${otp}</p>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Password Reset</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              margin: 0;
+              padding: 0;
+              background-color: #f9f9f9;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #ffffff;
+              border-radius: 8px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+              text-align: center;
+              padding: 20px 0;
+              border-bottom: 1px solid #eaeaea;
+            }
+            .content {
+              padding: 20px 0;
+              color: #333333;
+            }
+            .otp-container {
+              margin: 20px 0;
+              padding: 15px;
+              background-color: #f5f5f5;
+              border-radius: 5px;
+              text-align: center;
+            }
+            .otp-code {
+              font-size: 32px;
+              font-weight: bold;
+              letter-spacing: 5px;
+              color: #4a4a4a;
+            }
+            .expiry {
+              margin-top: 15px;
+              font-size: 14px;
+              color: #777777;
+            }
+            .warning {
+              margin-top: 20px;
+              padding: 10px;
+              background-color: #fff8e1;
+              border-left: 4px solid #ffc107;
+              border-radius: 4px;
+            }
+            .footer {
+              margin-top: 30px;
+              padding-top: 20px;
+              border-top: 1px solid #eaeaea;
+              text-align: center;
+              font-size: 12px;
+              color: #999999;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="color: #e74c3c; margin: 0;">Auth App</h1>
+              <p style="margin: 5px 0 0 0;">Password Reset</p>
+            </div>
+            <div class="content">
+              <p>Hello ${user.name},</p>
+              <p>We received a request to reset your password. Enter the following OTP code to proceed with your password reset:</p>
+              
+              <div class="otp-container">
+                <div class="otp-code">${otp}</div>
+                <p class="expiry">This code will expire in 15 minutes</p>
+              </div>
+              
+              <div class="warning">
+                <p style="margin: 0;"><strong>Security Notice:</strong> If you didn't request a password reset, please ignore this email and ensure your account is secure.</p>
+              </div>
+            </div>
+            <div class="footer">
+              <p>This is an automated email. Please do not reply.</p>
+              <p>&copy; ${new Date().getFullYear()} Auth App. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
       `
     }
     await transporter.sendMail(mailOption);
